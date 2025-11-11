@@ -1,0 +1,452 @@
+# @r1x/create-agent-kit
+
+## 1.3.1
+
+### Patch Changes
+
+- 574e9b0: # Solana Payment Network Support
+
+  This release adds comprehensive support for Solana payment networks across all adapters and templates.
+
+  ## New Features
+
+  ### Solana Network Support
+  - **Solana Mainnet** (`solana`) and **Solana Devnet** (`solana-devnet`) are now fully supported for payment receiving
+  - Both Hono and TanStack adapters support Solana payments via x402 protocol
+  - Agents can now receive payments in SPL USDC tokens on Solana networks
+
+  ### Interactive Network Selection
+  - All CLI templates now include an interactive dropdown for network selection:
+    - Base Sepolia (EVM testnet)
+    - Base (EVM mainnet)
+    - Solana Devnet
+    - Solana Mainnet
+  - Network selection replaces previous text input for better developer experience
+
+  ### CLI Network Flag
+  - Added `--network` flag for non-interactive mode
+  - Examples:
+    - `bunx @r1x/create-agent-kit my-agent --network=solana-devnet`
+    - `bunx @r1x/create-agent-kit my-agent --network=solana`
+  - Flag skips network prompt and directly sets `PAYMENTS_NETWORK` in generated `.env`
+
+  ## Improvements
+
+  ### Network Validation
+  - Added runtime validation in `validatePaymentsConfig()` that dynamically imports supported networks from x402 library
+  - Invalid networks (e.g., `solana-mainnet`) are now rejected at configuration time with clear error messages
+  - Validation lists all supported networks in error output for better debugging
+
+  ### Documentation
+  - Comprehensive Solana setup guide in all README and AGENTS.md files
+  - SPL USDC token addresses documented:
+    - Mainnet: `EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v`
+    - Devnet: `Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr`
+  - Solana configuration examples for both Hono and TanStack adapters
+  - Clarified address format differences: EVM (0x-prefixed) vs Solana (Base58)
+  - Explained separation between identity registration (EVM-only) and payment receiving (any network)
+
+  ### Template Schemas
+  - Updated all 4 template schemas with network enums
+  - Added examples for both EVM and Solana addresses
+  - Clarified that payment addresses can be shared across multiple agents
+  - Identity template now explains that PRIVATE_KEY is for developer's EVM wallet (identity registration), separate from PAYMENTS_RECEIVABLE_ADDRESS
+
+  ## Testing
+  - Added Solana payment tests for Hono adapter (6 tests)
+  - Added Solana payment tests for TanStack adapter (6 tests)
+  - Added core runtime Solana configuration tests (2 tests)
+  - Network validation tests verify unsupported networks are rejected
+  - All 114 tests passing
+
+  ## Bug Fixes
+  - Fixed CI workflow to run on `master` branch instead of `main`
+  - Fixed 4 CLI tests using outdated adapter names (`tanstack` → `tanstack-ui`)
+  - Fixed test prompt mock to handle network selection dropdown
+
+  ## Notes
+
+  ### Network Names
+
+  The correct Solana network identifiers per x402 specification are:
+  - `solana` - Mainnet (NOT `solana-mainnet`)
+  - `solana-devnet` - Devnet
+  - `solana-mainnet` - Does not exist in x402
+  - `solana-testnet` - Does not exist in x402
+
+  ### Architecture Clarifications
+  - **Developer wallet (PRIVATE_KEY)**: EVM wallet used for identity registration and deployment
+  - **Payment receiving address**: Can be EVM or Solana, used to receive payments at entrypoints
+  - **Agent's own wallet**: Future work (for reputation, validation, agent-to-agent calls)
+  - Payment addresses can be shared across multiple agents deployed by the same developer
+
+  Closes #11
+
+## 1.3.0
+
+### Minor Changes
+
+- 1509e59: # Major Refactor: Template-Based Architecture with Adapter Support
+
+  This release introduces a comprehensive refactor of the lucid-agents framework to support multiple runtime adapters and a flexible template system.
+
+  ## Critical Bug Fixes
+
+  ### Security Fix: Removed Hardcoded Payment Wallet Address
+  - **CRITICAL**: Payment configuration defaults were previously hardcoded to a specific wallet address
+  - All payment config fields (`facilitatorUrl`, `payTo`, `network`) are now `undefined` by default
+  - This forces explicit configuration and prevents payments from being sent to incorrect wallets
+  - Payment-related types are now properly optional: `payTo?: `0x${string}``
+
+  ### Stream Endpoint HTTP Semantics
+  - Stream endpoints are now always registered for all entrypoints
+  - Returns proper `400 Bad Request` when streaming is not supported (instead of `404 Not Found`)
+  - Improves API consistency and allows clients to optimistically try streaming without manifest lookups
+  - Better HTTP semantics: 404 = route doesn't exist, 400 = operation not supported
+
+  ### Config Scoping Fix
+  - Removed redundant `payments` property from `createAgentApp` return value
+  - Removed module-level global `activeInstanceConfig` to prevent state pollution
+  - Single source of truth: use `config.payments` directly
+  - Fixes issues with multiple agent instances in same process
+
+  ### Additional Fixes
+  - Fixed `ResponseInit` TypeScript linter error by using `ConstructorParameters<typeof Response>[1]`
+  - Removed all emojis from codebase (added to coding standards)
+  - Fixed 3 failing unit tests from previous refactor
+  - Updated test assertions for new API patterns
+
+  ## Breaking Changes
+  - **Template System**: Templates now use `.template` file extensions to avoid TypeScript compilation errors during development
+  - **Adapter Architecture**: Agent creation now requires selecting an adapter (Hono or TanStack Start)
+  - **Payment Config API**: Payment defaults are now `undefined` instead of having fallback values (explicit configuration required)
+  - **Return Value**: Removed redundant `payments` property from `createAgentApp` return (use `config.payments` instead)
+
+  ## New Features
+
+  ### Multi-Adapter Support
+  - **Hono Adapter** (`@r1x/agent-kit-hono`): Traditional HTTP server adapter
+  - **TanStack Start Adapter** (`@r1x/agent-kit-tanstack`): Full-stack React framework adapter with:
+    - Headless mode (API only)
+    - UI mode (full dashboard with wallet integration)
+
+  ### Template System
+  - Templates now support multiple adapters
+  - Template files use `.template` extension and are processed during scaffolding
+  - Support for adapter-specific code injection via placeholders:
+    - `{{ADAPTER_IMPORTS}}`
+    - `{{ADAPTER_PRE_SETUP}}`
+    - `{{ADAPTER_POST_SETUP}}`
+    - `{{ADAPTER_ID}}`
+
+  ### Improved Validation
+  - Added validation for identity feature configuration
+  - Added payment validation in TanStack adapter
+  - Better type safety in route handlers (e.g., params.key validation)
+
+  ### CLI Improvements
+  - `--adapter` flag to select runtime framework (hono, tanstack-ui, tanstack-headless)
+  - Better error messages for adapter compatibility
+  - Clear error suggestions when invalid adapter specified
+
+  ## Package Changes
+
+  ### @r1x/create-agent-kit
+  - Adapter selection system with support for multiple runtime frameworks
+  - Template processing with `.template` file handling
+  - Adapter-specific file layering system
+  - TanStack adapter available in two variants: `tanstack-ui` (full dashboard) and `tanstack-headless` (API only)
+  - Non-interactive mode improvements
+
+  ### @r1x/agent-kit
+  - Split into adapter-specific packages
+  - Core functionality moved to `@r1x/agent-core`
+  - Improved type definitions
+
+  ### @r1x/agent-kit-hono (NEW)
+  - Hono-specific runtime implementation
+  - Maintains backward compatibility with existing Hono-based agents
+
+  ### @r1x/agent-kit-tanstack (NEW)
+  - TanStack Start runtime implementation
+  - File-based routing support
+  - Payment middleware integration
+  - UI and headless variants
+
+  ### @r1x/agent-kit-identity
+  - Improved validation
+  - Better integration with template system
+
+  ### @r1x/agent-core (NEW)
+  - Shared core functionality across adapters
+  - Type definitions and utilities
+
+  ## Migration Guide
+
+  Existing projects using Hono will need to update imports:
+
+  ```typescript
+  // Before
+  import { createAgentApp } from '@r1x/agent-kit';
+
+  // After
+  import { createAgentApp } from '@r1x/agent-kit-hono';
+  ```
+
+  New projects should specify adapter during creation:
+
+  ```bash
+  # Hono adapter
+  bunx @r1x/create-agent-kit my-agent --adapter=hono
+
+  # TanStack with UI (full dashboard)
+  bunx @r1x/create-agent-kit my-agent --adapter=tanstack-ui
+
+  # TanStack headless (API only)
+  bunx @r1x/create-agent-kit my-agent --adapter=tanstack-headless
+  ```
+
+## 1.2.1
+
+### Patch Changes
+
+- 069795f: AI agent optimization and documentation enhancement
+
+  ### Non-Interactive CLI Arguments
+
+  Added support for passing template arguments via CLI flags in non-interactive mode. AI coding agents can now fully automate project scaffolding:
+
+  ```bash
+  bunx @r1x/create-agent-kit my-agent \
+    --template=identity \
+    --non-interactive \
+    --AGENT_DESCRIPTION="My agent" \
+    --PAYMENTS_RECEIVABLE_ADDRESS="0x..."
+  ```
+
+  ### AGENTS.md Documentation
+
+  Added comprehensive AGENTS.md files following the agents.md industry standard (20,000+ projects):
+  - Template-specific guides for blank, axllm, axllm-flow, and identity templates
+  - Root-level monorepo guide with architecture overview and API reference
+  - Example-driven with copy-paste-ready code samples
+  - Covers entrypoint patterns, testing, troubleshooting, and common use cases
+
+  ### Template Schema JSON
+
+  Added machine-readable JSON Schema files (`template.schema.json`) for each template documenting all configuration arguments, types, and defaults.
+
+  ### Improvements
+  - Fixed boolean handling in environment setup (boolean false now correctly outputs "false" not empty string)
+  - Converted IDENTITY_AUTO_REGISTER to confirm-type prompt for better UX
+  - Added 11 new comprehensive test cases (21 total, all passing)
+  - Updated CLI help text and README with non-interactive examples
+
+  ### Bug Fixes
+  - Fixed release bot workflow to use proper dependency sanitization script
+  - Ensures published npm packages have resolved workspace and catalog dependencies
+
+## 1.2.0
+
+### Minor Changes
+
+- e5b652c: Complete template system refactor with improved validation and safety
+  - **Renamed environment variables** for clarity: `ADDRESS` → `PAYMENTS_RECEIVABLE_ADDRESS`, `APP_NAME` → `AGENT_NAME`, `AUTO_REGISTER` → `IDENTITY_AUTO_REGISTER`
+  - **Removed default payment address** (issue #2) - prevents accidental fund loss by requiring explicit wallet address configuration
+  - **Added validation** for agent metadata (name, version, description) and payment configuration with clear error messages (issue #8)
+  - **Centralized validation** in new `validation.ts` module for reusable, consistent validation logic
+  - **Simplified .env generation** - pure `KEY=VALUE` format, all prompts written to .env regardless of value
+  - **Standardized wizard terminology** - all templates use "wizard" consistently, removed "onboarding"
+  - **Unified wizard prompts** - all templates share identical core prompts for consistency
+  - **Added `--wizard=no` flag** for non-interactive usage in CI/CD environments
+  - **Removed code generation** from templates - pure runtime configuration via `process.env`
+  - **Removed `DEFAULT_TEMPLATE_VALUES`** duplication - `template.json` is single source of truth
+  - **Simplified codebase** - removed ~100 lines of complex .env parsing logic
+
+  Breaking changes: Existing projects must update environment variable names in their `.env` files.
+
+## 1.1.2
+
+### Patch Changes
+
+- fixed 8004 agent metadata generation
+
+## 1.1.1
+
+### Patch Changes
+
+- patch
+
+## 1.1.0
+
+### Minor Changes
+
+- bumps
+
+## 1.0.0
+
+## 0.2.25
+
+### Patch Changes
+
+- bump and namechange
+
+## 0.2.24
+
+### Patch Changes
+
+- fix bug in GET route
+
+## 0.2.23
+
+### Patch Changes
+
+- agent kit fix and invoke page allowing wallet payments
+
+## 0.2.22
+
+### Patch Changes
+
+- fix favicon
+
+## 0.2.21
+
+### Patch Changes
+
+- fix hot
+
+## 0.2.20
+
+### Patch Changes
+
+- 7e25582: update
+- fixed kit issue with pricing
+
+## 0.2.19
+
+### Patch Changes
+
+- c023ca0: hey
+
+## 0.2.18
+
+### Patch Changes
+
+- f470d6a: bump
+
+## 0.2.17
+
+### Patch Changes
+
+- bump
+
+## 0.2.16
+
+### Patch Changes
+
+- up
+
+## 0.2.15
+
+### Patch Changes
+
+- be4c11a: bump
+
+## 0.2.14
+
+### Patch Changes
+
+- bumps
+- bump
+
+## 0.2.13
+
+### Patch Changes
+
+- bumps
+
+## 0.2.12
+
+### Patch Changes
+
+- bump
+
+## 0.3.0
+
+### Minor Changes
+
+- add interactive onboarding prompts for agent metadata, pricing, and payments scaffolding.
+- accept CLI invocations without an explicit `<app-name>` by prompting (or defaulting) to a sensible directory name.
+
+## 0.2.11
+
+### Patch Changes
+
+- bump
+
+## 0.2.10
+
+### Patch Changes
+
+- bump it
+
+## 0.2.9
+
+### Patch Changes
+
+- bump
+
+## 0.2.8
+
+### Patch Changes
+
+- bump build
+
+## 0.2.7
+
+### Patch Changes
+
+- examples and cleanup
+
+## 0.2.6
+
+### Patch Changes
+
+- bump
+
+## 0.2.5
+
+### Patch Changes
+
+- bump
+- bump
+
+## 0.2.4
+
+### Patch Changes
+
+- bump
+
+## 0.2.3
+
+### Patch Changes
+
+- bump
+
+## 0.2.2
+
+### Patch Changes
+
+- bump
+
+## 0.2.1
+
+### Patch Changes
+
+- bump
+
+## 0.2.0
+
+### Minor Changes
+
+- bump

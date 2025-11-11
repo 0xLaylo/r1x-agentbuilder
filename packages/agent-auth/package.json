@@ -1,0 +1,40 @@
+{
+  "name": "@r1x/agent-auth",
+  "version": "1.0.0",
+  "description": "Agent runtime authentication and wallet management for r1x Agent SDK",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "sideEffects": false,
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsup",
+    "clean": "rm -rf dist",
+    "prepare": "bun run build",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "viem": "^2.38.5"
+  },
+  "devDependencies": {
+    "tsup": "catalog:",
+    "typescript": "catalog:",
+    "@r1x/eslint-config": "workspace:*",
+    "@r1x/prettier-config": "workspace:*"
+  }
+}
+

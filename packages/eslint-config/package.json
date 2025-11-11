@@ -1,0 +1,13 @@
+{
+  "name": "@r1x/eslint-config",
+  "version": "1.0.0",
+  "description": "Shared ESLint configuration for r1x Agent SDK monorepo",
+  "main": "index.js",
+  "private": true,
+  "files": [
+    "index.js",
+    ".eslintrc.cjs.example",
+    "README.md"
+  ]
+}
+

@@ -1,0 +1,45 @@
+{
+  "name": "@r1x/agent-kit-identity",
+  "version": "1.3.1",
+  "description": "ERC-8004 identity helpers for r1x agent kit surfaces",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "sideEffects": false,
+  "files": [
+    "dist",
+    "examples",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsup",
+    "clean": "rm -rf dist",
+    "prepare": "bun run build",
+    "lint": "eslint src --ext .ts",
+    "lint:fix": "eslint src --ext .ts --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "type-check": "tsc --build tsconfig.json && tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "viem": "^2.38.1"
+  },
+  "devDependencies": {
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.2",
+    "@r1x/eslint-config": "workspace:*",
+    "@r1x/prettier-config": "workspace:*"
+  }
+}

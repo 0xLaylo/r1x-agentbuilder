@@ -1,0 +1,44 @@
+{
+  "name": "@r1x/create-agent-kit",
+  "version": "1.3.1",
+  "description": "Scaffold a Bun agent app powered by @r1x/agent-kit.",
+  "type": "module",
+  "bin": {
+    "create-agent-kit": "dist/index.js"
+  },
+  "files": [
+    "dist",
+    "templates",
+    "adapters"
+  ],
+  "scripts": {
+    "test": "bun test",
+    "build": "tsup",
+    "clean": "rm -rf dist",
+    "prepare": "bun run build",
+    "lint": "eslint src --ext .ts",
+    "lint:fix": "eslint src --ext .ts --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "type-check": "tsc --build tsconfig.json && tsc -p tsconfig.json --noEmit"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "agent",
+    "scaffold",
+    "bun",
+    "r1x"
+  ],
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^24.3.1",
+    "bun-types": "^1.1.16",
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.2",
+    "@r1x/eslint-config": "workspace:*",
+    "@r1x/prettier-config": "workspace:*"
+  }
+}

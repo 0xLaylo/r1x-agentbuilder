@@ -1,0 +1,39 @@
+{
+  "name": "@r1x/agent-kit-tanstack",
+  "version": "0.2.1",
+  "description": "TanStack Start adapter for r1x agent runtime",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "sideEffects": false,
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsup",
+    "clean": "rm -rf dist",
+    "prepare": "bun run build"
+  },
+  "dependencies": {
+    "@r1x/agent-kit": "workspace:*",
+    "@r1x/x402-tanstack-start": "workspace:*",
+    "viem": "^2.21.26",
+    "x402": "catalog:"
+  },
+  "devDependencies": {
+    "tsup": "catalog:",
+    "typescript": "catalog:"
+  }
+}
